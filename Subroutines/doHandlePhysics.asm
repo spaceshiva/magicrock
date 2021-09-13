@@ -507,7 +507,6 @@ GRAVITY_HI = #$00
 	
 		+notSolid:
 		
-	
 			;; is not solid, don't land.
 			LDA Object_y_lo,x
 			CLC
