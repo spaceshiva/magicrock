@@ -216,6 +216,26 @@
 										STA Object_y_lo,x
 									PLA
 									TAX
+
+									;; land player (check first if collision point is below us)
+									GetActionStep selfObject
+									CMP #$02 ;; we are jumping
+									BEQ +inJumpStep
+										JMP +done
+									+inJumpStep
+										; only checks gamepad #1
+										LDA gamepad 
+										AND #%11000000
+										BNE +changeToWalk_Dpadpressed
+											JMP +checkLandingDpadNotpressed
+										; dpad is pressed, so we walk
+										+changeToWalk_Dpadpressed:
+											ChangeActionStep selfObject, #$01 ; change to walk
+											JMP +done
+
+										+checkLandingDpadNotpressed:
+											ChangeActionStep selfObject, #$00 ; change to idle
+
 									JMP +done
 									
 							+isNotPlayerNPCCol
