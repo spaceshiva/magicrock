@@ -2,8 +2,7 @@
 ;; loaded by SCR_HANDLE_MONSTER_HURT
 ;; called by label doHandleHurtMonster
 
-    ;; destroys the current monster and put a block in its place
-    LDX otherObject
+    ;;;;;;;;;;;; prepare object creation
     LDA Object_screen,x
 	STA tempD
 	
@@ -12,17 +11,29 @@
 	
 	LDA Object_y_hi,x
 	STA tempB
+   
+    LDA #$08 ; ground block
+    STA tempC
 
-    ;; before destroying, maybe changing the action to hurt?
-    ;; in this case we need to change to "destroy object" after the animation ends, not here
-    ;ChangeActionStep otherObject, #$07
+    LDA Object_vulnerability,x
+    AND #%0000001
+    BEQ +replaceObject
+        LDA #$09 ; floating block
+        STA tempC
 
-    LDA otherObject
-    DestroyObject
+    ;; TODO: maybe having a vertical / horizontal blocks as well?
 
-	TXA
-    PHA
-    CreateObjectOnScreen tempA, tempB, #$08, #$00, tempD
-    		;;; x, y, object, starting action, screen.
-    PLA
-    TAX
+    ;; destroys the current monster and put a block in its place
+    +replaceObject          
+        ;; before destroying, maybe changing the action to hurt?
+        ;; in this case we need to change to "destroy object" after the animation ends, not here
+        ;ChangeActionStep otherObject, #$07
+        ;LDA otherObject
+        DestroyObject
+
+        TXA
+        PHA
+        CreateObjectOnScreen tempA, tempB, tempC, #$00, tempD
+                ;;; x, y, object, starting action, screen.
+        PLA
+        TAX
