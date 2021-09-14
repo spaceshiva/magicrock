@@ -191,6 +191,11 @@
 								JSR getOtherColBox
 								JSR doCompareBoundingBoxes
 								BEQ +skipCollision
+									;; we are in a block or around it, we should be able to jump
+									;; set the flag accordingly
+									LDA #$01
+									STA colInfo
+
 									TXA
 									STA otherObject
 									;; There was a collision between a player and a powerup.
@@ -217,7 +222,7 @@
 									PLA
 									TAX
 
-									;; land player (check first if collision point is below us)
+									;; land player in the npc head (check first if collision point is below us)
 									GetActionStep selfObject
 									CMP #$02 ;; we are jumping
 									BEQ +inJumpStep
@@ -239,7 +244,10 @@
 									JMP +done
 									
 							+isNotPlayerNPCCol
-							
+								;; clear the block colision flag
+								LDA #$00
+								STA colInfo
+
 							+skipCollision
 					
 							INX
