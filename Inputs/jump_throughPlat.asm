@@ -4,10 +4,12 @@
 ;; Only can jump if the place below feet is free.
     SwitchBank #$1C
 
-    ;; we check if the colisions flag are defined -> #$01 means e are above a block, so we can jump
-    LDA colInfo
-    CMP #$01
-    BNE +checkMore
+    ;; we check if the colisions flag are defined 
+    LDA colInfo ;; leftmost bit means that a collision happened
+    AND #%00000001
+    BEQ +checkMore
+        LDA $00
+        STA colInfo
         JMP +doJump
     +checkMore
 
@@ -92,10 +94,6 @@
     LDA ObjectJumpSpeedHi,y
     EOR #$FF
     STA Object_v_speed_hi,x
-
-    ;; clear the block colision flag
-    LDA #$00
-    STA colInfo
         
     ;STX temp ;; assumes the object we want to move is in x.
 

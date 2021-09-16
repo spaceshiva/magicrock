@@ -188,19 +188,77 @@
 							BNE +isPlayerNPCCol
 								JMP +isNotPlayerNPCCol
 							+isPlayerNPCCol
+								;; stop moving the block since we don't know yet if we will need to move it
+								StopMoving otherObject, #$FF, #$00
+								;; check for collision elements
 								JSR getOtherColBox
 								JSR doCompareBoundingBoxes
-								BEQ +skipCollision
-									;; we are in a block or around it, we should be able to jump
-									;; set the flag accordingly
-									LDA #$01
-									STA colInfo
+								BNE +handleCollision
+									JMP +skipCollision
+								+handleCollision
+									;LDA #%00000001
+									STA colInfo ;; the result of the collision algorithm is loaded in A
 
-									TXA
-									STA otherObject
-									;; There was a collision between a player and a powerup.
+
+									STX otherObject
+									;; There was a collision between a player and a block.
 									;; player is self.
-									;; powerup is other.
+									;; block is other.
+
+									;LDX otherObject
+									;LDA Object_vulnerability,x
+									;AND #%00000001;; ignores gravity, won't care for movement
+									;BEQ +handleJumpLanding
+										;LDA colInfo
+										;ORA #%00000100
+										;STA colInfo
+
+									+handleJumpLanding
+										;; handles player landing in the block after a jump
+										;; land player in the block head
+										GetActionStep selfObject
+										CMP #$02 ;; we are jumping
+										BEQ +inJumpStep
+											JMP +handleBlockMovement ;; not jumping, check if we need to move it
+										+inJumpStep
+											; only checks gamepad #1
+											LDA gamepad 
+											AND #%11000000
+											BNE +changeToWalk_Dpadpressed
+												JMP +checkLandingDpadNotpressed
+											; dpad is pressed, so we walk
+											+changeToWalk_Dpadpressed:
+												ChangeActionStep selfObject, #$01 ; change to walk
+												JMP +handleBlockMovement
+
+											+checkLandingDpadNotpressed:
+												ChangeActionStep selfObject, #$00 ; change to idle
+									
+									+handleBlockMovement
+									LDA colInfo
+									AND #%00000010 ;; if we have a hCol, we can move. Otherwise skip.
+									BNE +doBlockMovement
+										JMP +resetsPosition
+
+									;; updates block movement									
+									+doBlockMovement
+										LDA gamepad 
+										AND #%10000000
+										BNE +moveBlockRight
+											JMP +checkBlockLeft
+										
+										+moveBlockRight
+											StartMoving otherObject, #RIGHT
+											JMP +resetsPosition
+										
+										+checkBlockLeft
+											LDA gamepad 
+											AND #%01000000
+											BEQ +resetsPosition
+												StartMoving otherObject, #LEFT
+
+									; clean up, fix both position to not entwine
+									+resetsPosition
 									TXA 
 									PHA
 										LDX selfObject
@@ -222,33 +280,12 @@
 									PLA
 									TAX
 
-									;; land player in the npc head (check first if collision point is below us)
-									GetActionStep selfObject
-									CMP #$02 ;; we are jumping
-									BEQ +inJumpStep
-										JMP +done
-									+inJumpStep
-										; only checks gamepad #1
-										LDA gamepad 
-										AND #%11000000
-										BNE +changeToWalk_Dpadpressed
-											JMP +checkLandingDpadNotpressed
-										; dpad is pressed, so we walk
-										+changeToWalk_Dpadpressed:
-											ChangeActionStep selfObject, #$01 ; change to walk
-											JMP +done
-
-										+checkLandingDpadNotpressed:
-											ChangeActionStep selfObject, #$00 ; change to idle
-
 									JMP +done
 									
 							+isNotPlayerNPCCol
-								;; clear the block colision flag
-								LDA #$00
-								STA colInfo
 
 							+skipCollision
+
 					
 							INX
 							CPX #TOTAL_MAX_OBJECTS
