@@ -190,6 +190,7 @@
 							+isPlayerNPCCol
 								;; stop moving the block since we don't know yet if we will need to move it
 								StopMoving otherObject, #$FF, #$00
+
 								;; check for collision elements
 								JSR getOtherColBox
 								JSR doCompareBoundingBoxes
@@ -236,7 +237,7 @@
 									
 									+handleBlockMovement
 									LDA colInfo
-									AND #%00000010 ;; if we have a hCol, we can move. Otherwise skip.
+									AND #%00000010 ;; if we have vertical, don't move
 									BNE +doBlockMovement
 										JMP +resetsPosition
 
@@ -283,6 +284,8 @@
 									JMP +done
 									
 							+isNotPlayerNPCCol
+								LDA #$00
+								STA colInfo
 
 							+skipCollision
 

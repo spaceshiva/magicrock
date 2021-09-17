@@ -1,5 +1,8 @@
-;;;
+;;; to understand compare in 6502: http://6502.org/tutorials/compare_instructions.html
+
 doCompareBoundingBoxes:
+	LDA $00
+	STA tempC
 	;;; more complicated than this
 	; LDA self_screen
 	; CMP other_screen
@@ -26,7 +29,7 @@ doCompareBoundingBoxes:
 			;; this means bounds are being straddled.
 			LDA bounds_right
 			CMP other_left
-			BCC +noBboxCollision
+			BCC +noBboxCollision ;; less
 				JMP +hCol
 		+normalBoundsCheck
 	
@@ -56,24 +59,40 @@ doCompareBoundingBoxes:
 			BCS +noBboxCollision
 		
 +hCol
-	LDA #%00000010
-    ;;          | |
-	;;          | ---> happened a collision, no matter where
-	;;          |----> horizontal collision
-	STA tempC
-
 	LDA other_bottom
 	CMP bounds_top
-	BCC noBboxCollision
+	BCC +vCol ;; less
 	LDA bounds_bottom
 	CMP other_top
-	BCC noBboxCollision
+	BCC +vCol ;; less
+
+	LDA tempC
+	ORA #%00000010 ;;any collision
+	STA tempC
+
 ;;;;;;;;;;;;;;;;;;
+;; check now vertical collision
+;; TODO: figure how to identify vertical collision and avoid doing horizontal collision when we are on top
+
++vCol
+	LDA bounds_top
+	CMP other_bottom
+	BCC +returnCol
+	LDA other_top
+	CMP bounds_bottom
+	BCC +returnCol
+	;; happened a vertical collision
+	LDA tempC
+	ORA #%00000001 ;;vertical
+    ;;          | |
+	;;          | ---> happened a collision, no matter where
+	;;          |----> vertical collision
+	STA tempC
 
 ;;;;;;;;;;;;;;;;;;	
 
-	LDA tempC ;; read that YES, there was a collision here. (could make this the object ID)
-	ORA #%00000001
++returnCol
+	LDA tempC
 	RTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 noBboxCollision;; there is no collision here horizontally.
