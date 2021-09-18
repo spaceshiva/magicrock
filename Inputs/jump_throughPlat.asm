@@ -6,7 +6,7 @@
 
     ;; we check if the colisions flag are defined 
     LDA colInfo ;; leftmost bit means that a collision happened
-    AND #%00000001
+    AND #%00000010
     BEQ +checkMore
         LDA $00
         STA colInfo

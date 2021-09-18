@@ -61,13 +61,13 @@ doCompareBoundingBoxes:
 +hCol
 	LDA other_bottom
 	CMP bounds_top
-	BCC +vCol ;; less
+	BCC +noBboxCollision ;; less
 	LDA bounds_bottom
 	CMP other_top
-	BCC +vCol ;; less
+	BCC +noBboxCollision ;; less
 
 	LDA tempC
-	ORA #%00000010 ;;any collision
+	ORA #%00000001 ;;horizontal collision
 	STA tempC
 
 ;;;;;;;;;;;;;;;;;;
@@ -75,15 +75,14 @@ doCompareBoundingBoxes:
 ;; TODO: figure how to identify vertical collision and avoid doing horizontal collision when we are on top
 
 +vCol
-	LDA bounds_top
-	CMP other_bottom
-	BCC +returnCol
 	LDA other_top
+	CLC
+	ADC #$03
 	CMP bounds_bottom
 	BCC +returnCol
 	;; happened a vertical collision
 	LDA tempC
-	ORA #%00000001 ;;vertical
+	ORA #%00000010 ;;vertical
     ;;          | |
 	;;          | ---> happened a collision, no matter where
 	;;          |----> vertical collision

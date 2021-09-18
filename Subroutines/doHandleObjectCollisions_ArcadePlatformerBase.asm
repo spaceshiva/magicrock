@@ -214,7 +214,14 @@
 										;ORA #%00000100
 										;STA colInfo
 
+									;; only handle jumping, if we landed above the block
+									LDA colInfo
+									AND #%00000010
+									BNE +handleJumpLanding
+										JMP +handleBlockMovement
+
 									+handleJumpLanding
+										;; TODO: 
 										;; handles player landing in the block after a jump
 										;; land player in the block head
 										GetActionStep selfObject
@@ -238,7 +245,7 @@
 									+handleBlockMovement
 									LDA colInfo
 									AND #%00000010 ;; if we have vertical, don't move
-									BNE +doBlockMovement
+									BEQ +doBlockMovement
 										JMP +resetsPosition
 
 									;; updates block movement									
@@ -286,6 +293,7 @@
 							+isNotPlayerNPCCol
 								LDA #$00
 								STA colInfo
+								StopMoving otherObject, #$FF, #$00
 
 							+skipCollision
 
