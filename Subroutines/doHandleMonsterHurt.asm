@@ -16,7 +16,15 @@
     STA tempC
 
     LDA Object_vulnerability,x
-    AND #%0000001
+    AND #%0000010 ;; flag1
+    BEQ +continueCheck
+        LDA #$0A ;HLeftElevatorBlock
+        STA tempC
+        JMP +replaceObject 
+    
+    +continueCheck
+    LDA Object_vulnerability,x
+    AND #%0000001 ;; gravity
     BEQ +replaceObject
         LDA #$09 ; floating block
         STA tempC

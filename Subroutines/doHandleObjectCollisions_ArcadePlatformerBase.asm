@@ -206,14 +206,6 @@
 									;; player is self.
 									;; block is other.
 
-									;LDX otherObject
-									;LDA Object_vulnerability,x
-									;AND #%00000001;; ignores gravity, won't care for movement
-									;BEQ +handleJumpLanding
-										;LDA colInfo
-										;ORA #%00000100
-										;STA colInfo
-
 									;; only handle jumping, if we landed above the block
 									LDA colInfo
 									AND #%00000010
@@ -245,6 +237,12 @@
 									+handleBlockMovement
 									LDA colInfo
 									AND #%00000010 ;; if we have vertical, don't move
+									BEQ +continueCheck
+										JMP +resetsPosition
+
+									+continueCheck
+									LDA Object_vulnerability,X
+									AND #%00000010 ;; flag 1 (we don't move these blocks)
 									BEQ +doBlockMovement
 										JMP +resetsPosition
 
