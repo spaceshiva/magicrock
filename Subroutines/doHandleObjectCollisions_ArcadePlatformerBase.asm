@@ -188,23 +188,25 @@
 							BNE +isPlayerNPCCol
 								JMP +isNotPlayerNPCCol
 							+isPlayerNPCCol
-								;; stop moving the block since we don't know yet if we will need to move it
-								StopMoving otherObject, #$FF, #$00
-
 								;; check for collision elements
 								JSR getOtherColBox
 								JSR doCompareBoundingBoxes
 								BNE +handleCollision
-									JMP +skipCollision
+									STX otherObject
+									LDA Object_vulnerability,x
+									AND #%00000010 ;; flag 1 (we don't move these blocks)
+									BNE +goToSkipCol
+										StopMoving otherObject, #$FF, #$00
+									+goToSkipCol
+										JMP +skipCollision
 								+handleCollision
-									;LDA #%00000001
 									STA colInfo ;; the result of the collision algorithm is loaded in A
-
 
 									STX otherObject
 									;; There was a collision between a player and a block.
 									;; player is self.
 									;; block is other.
+									;StopMoving otherObject, #$FF, #$00
 
 									;; only handle jumping, if we landed above the block
 									LDA colInfo
@@ -241,7 +243,7 @@
 										JMP +resetsPosition
 
 									+continueCheck
-									LDA Object_vulnerability,X
+									LDA Object_vulnerability,x
 									AND #%00000010 ;; flag 1 (we don't move these blocks)
 									BEQ +doBlockMovement
 										JMP +resetsPosition
@@ -291,7 +293,6 @@
 							+isNotPlayerNPCCol
 								LDA #$00
 								STA colInfo
-								StopMoving otherObject, #$FF, #$00
 
 							+skipCollision
 
