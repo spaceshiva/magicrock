@@ -13,6 +13,9 @@
     CMP #$03 ;; the state of your shoot animation
     BEQ +skipChangeToMove
 
+    CMP #$06 ;; the state of your recoil animation
+    BEQ +skipChangeToMove
+
     ChangeActionStep temp, #$01 ;; assumes that "walk" is in action 1
         ;arg0 = what object?
         ;arg1 = what behavior?

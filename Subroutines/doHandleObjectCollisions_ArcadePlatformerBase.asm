@@ -236,16 +236,16 @@
 												ChangeActionStep selfObject, #$00 ; change to idle
 									
 									+handleBlockMovement
-									LDA colInfo
-									AND #%00000010 ;; if we have vertical, don't move
-									BEQ +continueCheck
-										JMP +resetsPosition
+										LDA colInfo
+										AND #%00000010 ;; if we have vertical, don't move
+										BEQ +continueCheck
+											JMP +resetsPosition
 
 									+continueCheck
-									LDA Object_vulnerability,x
-									AND #%00000010 ;; flag 1 (we don't move these blocks)
-									BEQ +doBlockMovement
-										JMP +resetsPosition
+										LDA Object_vulnerability,x
+										AND #%00000010 ;; flag 1 (we don't move these blocks)
+										BEQ +doBlockMovement
+											JMP +doBlockRecoil
 
 									;; updates block movement									
 									+doBlockMovement
@@ -265,11 +265,47 @@
 											AND #%01000000
 											BEQ +resetsPosition
 												StartMoving otherObject, #LEFT
+										
+										JMP +resetsPosition
+
+									+doBlockRecoil
+										TXA 
+										PHA
+
+										LDX selfObject ;;this is the player
+										LDA #$00
+										STA Object_h_speed_hi,x
+										STA Object_h_speed_lo,x
+										STA Object_v_speed_hi,x
+										STA Object_v_speed_lo,x
+										LDA xPrev
+										STA Object_x_hi,x
+										LDA yPrev
+										STA Object_y_hi,x
+										LDA Object_direction,x
+										AND #%00000111
+										CLC
+										ADC #$04
+										AND #%00000111
+										TAY
+										LDA DirectionTableOrdered,y
+										STA temp
+										LDA Object_direction,x
+										AND #%00001111
+										ORA temp
+										STA Object_direction,x
+										ChangeActionStep selfObject, #$06 ;; pushing action
+
+										
+										PLA
+										TAX
+
+									JMP +done
 
 									; clean up, fix both position to not entwine
 									+resetsPosition
-									TXA 
-									PHA
+										TXA 
+										PHA
 										LDX selfObject ;;this is the player
 										;; we reset it's x and y
 										LDA xPrev
@@ -287,8 +323,9 @@
 										STA Object_v_speed_hi,x
 										STA Object_x_lo,x
 										STA Object_y_lo,x
-									PLA
-									TAX
+										
+										PLA
+										TAX
 
 									JMP +done
 									

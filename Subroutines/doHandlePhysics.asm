@@ -104,6 +104,51 @@ doHandlePhysics:
 							;; which was figured out in the directional macro.
 							
 	useNormalDirectionalPhysics:
+
+		RECOIL_SPEED_HI = #$01
+		RECOIL_SPEED_LO = #$01
+
+		STX temp
+		GetActionStep temp
+		CMP #$06 ;; recoil
+		BNE +notRecoiled
+			;;; this object is recoiled.
+			;;; so it's speed will be determined by the recoil speed above.
+			;;; any caveats to that, put here.  For instance, if there is a monster bit
+			;;; that prevents recoil.
+			LDA Object_direction,x
+			AND #%10000000
+			BNE +isMovingH
+				;; is not moving h
+			LDA Object_direction,x	
+			AND #%00100000
+			BNE +isMovingV
+				;; is not moving V
+				JMP +skipPhysics
+			+isMovingV
+				LDA #RECOIL_SPEED_LO 
+				STA Object_v_speed_lo,x
+				LDA #RECOIL_SPEED_HI
+				STA Object_v_speed_hi,x
+				
+				LDA #$00
+				STA Object_h_speed_hi,x
+				STA Object_h_speed_lo,x
+				JMP skipDoHdec
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+			+isMovingH
+				LDA #RECOIL_SPEED_LO 
+				STA Object_h_speed_lo,x
+				LDA #RECOIL_SPEED_HI
+				STA Object_h_speed_hi,x
+				
+				LDA #$00
+				STA Object_v_speed_hi,x
+				STA Object_v_speed_lo,x
+				JMP skipDoHdec
+
+		+notRecoiled
+
 	;;; jump out to bank 1C to load in physics values.
 	;SwitchBank #$1C
 		

@@ -8,6 +8,9 @@
     CMP #$03 ;; the state of your shoot animation
     BEQ +skipMovingRight
 
+    CMP #06 ;; recoiled
+    BEQ +skipMovingRight
+
     StartMoving temp, #RIGHT
     STX temp ;; assumes the object we want to move is in x.
     ChangeFacingDirection temp, #FACE_RIGHT
