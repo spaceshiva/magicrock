@@ -185,7 +185,7 @@
 						+isNotPlayerPowerupCol	
 							LDA Object_flags,x
 							AND #%10000000
-							BNE +isPlayerNPCCol
+							BNE +isPlayerNPCCol ;; NPC for us are blocks
 								JMP +isNotPlayerNPCCol
 							+isPlayerNPCCol
 								;; check for collision elements
@@ -215,13 +215,12 @@
 										JMP +handleBlockMovement
 
 									+handleJumpLanding
-										;; TODO: 
 										;; handles player landing in the block after a jump
 										;; land player in the block head
 										GetActionStep selfObject
 										CMP #$02 ;; we are jumping
 										BEQ +inJumpStep
-											JMP +handleBlockMovement ;; not jumping, check if we need to move it
+											JMP +resetsPosition ;; not jumping, reset
 										+inJumpStep
 											; only checks gamepad #1
 											LDA gamepad 
@@ -250,6 +249,8 @@
 
 									;; updates block movement									
 									+doBlockMovement
+										;; first we make sure to stop it
+										StopMoving otherObject, #$FF
 										LDA gamepad 
 										AND #%10000000
 										BNE +moveBlockRight
@@ -269,7 +270,8 @@
 									+resetsPosition
 									TXA 
 									PHA
-										LDX selfObject
+										LDX selfObject ;;this is the player
+										;; we reset it's x and y
 										LDA xPrev
 										STA Object_x_hi,x
 										STA xHold_hi
