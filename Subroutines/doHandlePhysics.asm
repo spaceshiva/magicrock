@@ -105,8 +105,8 @@ doHandlePhysics:
 							
 	useNormalDirectionalPhysics:
 
-		RECOIL_SPEED_HI = #$01
-		RECOIL_SPEED_LO = #$01
+		RECOIL_SPEED_HI = #$00
+		RECOIL_SPEED_LO = #$80
 
 		STX temp
 		GetActionStep temp
@@ -314,7 +314,7 @@ isMovingRight:
 	ORA #%00001111
 	STA collisionsToCheck 
 		LDA tempA
-		clc
+		CLC
 		ADC tempB
 		BNE hSpeedIsNotZero2
 			;; h speed is zero, which means no h direction
@@ -344,7 +344,7 @@ gotHmoveDirection:
 	STA xHold_screen
 	
 	
-	 LDA #BOUNDS_LEFT
+	LDA #BOUNDS_LEFT
     BNE doNonZeroBoundsLeftCheck
         LDA Object_x_lo,x
         SEC

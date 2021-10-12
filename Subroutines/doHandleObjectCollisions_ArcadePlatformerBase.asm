@@ -191,7 +191,7 @@
 								;; check for collision elements
 								JSR getOtherColBox
 								JSR doCompareBoundingBoxes
-								BNE +handleCollision
+								BNE +handleCollision ;; we did collide
 									STX otherObject
 									LDA Object_vulnerability,x
 									AND #%00000010 ;; flag 1 (we don't move these blocks)
@@ -201,12 +201,12 @@
 										JMP +skipCollision
 								+handleCollision
 									STA colInfo ;; the result of the collision algorithm is loaded in A
+												;; from the "doCompareBoundingBoxes" routine
 
 									STX otherObject
 									;; There was a collision between a player and a block.
 									;; player is self.
 									;; block is other.
-									;StopMoving otherObject, #$FF, #$00
 
 									;; only handle jumping, if we landed above the block
 									LDA colInfo
@@ -230,12 +230,22 @@
 											; dpad is pressed, so we walk
 											+changeToWalk_Dpadpressed:
 												ChangeActionStep selfObject, #$01 ; change to walk
-												JMP +handleBlockMovement
+												JMP +resetsPosition ;; resets collision, 
 
 											+checkLandingDpadNotpressed:
 												ChangeActionStep selfObject, #$00 ; change to idle
-									
+
 									+handleBlockMovement
+										;; check if we are in the middle of a jump and we collide to the block
+										;; we don't want to freeze the player in the middle of the block 
+										;; in this case, we just ignore the collision
+										GetActionStep selfObject
+										CMP #$02 ;; we are jumping
+										BNE +continueHandlingBlockMovement
+											JMP +done
+										
+										+continueHandlingBlockMovement
+										LDX otherObject ;; add the block to the memory again
 										LDA colInfo
 										AND #%00000010 ;; if we have vertical, don't move
 										BEQ +continueCheck
@@ -263,12 +273,23 @@
 										+checkBlockLeft
 											LDA gamepad 
 											AND #%01000000
-											BEQ +resetsPosition
+											BEQ +doneBlockMove
 												StartMoving otherObject, #LEFT
 										
+										+doneBlockMove
 										JMP +resetsPosition
 
 									+doBlockRecoil
+										;; takes the block direction
+										LDA Object_direction,x
+										AND #%00000111
+										CLC
+										ADC #$04
+										AND #%00000111
+										TAY
+										LDA DirectionTableOrdered,y
+										STA temp1 ;; block direction
+
 										TXA 
 										PHA
 
@@ -282,6 +303,7 @@
 										STA Object_x_hi,x
 										LDA yPrev
 										STA Object_y_hi,x
+
 										LDA Object_direction,x
 										AND #%00000111
 										CLC
@@ -290,12 +312,21 @@
 										TAY
 										LDA DirectionTableOrdered,y
 										STA temp
-										LDA Object_direction,x
-										AND #%00001111
-										ORA temp
-										STA Object_direction,x
-										ChangeActionStep selfObject, #$06 ;; pushing action
+										CMP temp1 ;; check if we are facing in the same direction (block and player)
+										          ;; the idea here is to turn the player to the opposite direction, so we can have 
+												  ;; an animation like trying to push the object
+										BNE +differentDirection ;; same direction, reverse our face (we need to face the block)
+											ORA FacingTableOrdered,y
+											JMP +doneRecoil
 
+										+differentDirection ;; we are already facing the block, won't change
+											LDA Object_direction,x
+											AND #%00001111
+											ORA temp
+											
+										+doneRecoil
+											STA Object_direction,x
+											ChangeActionStep selfObject, #$06 ;; pushing action
 										
 										PLA
 										TAX

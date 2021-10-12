@@ -28,6 +28,10 @@
 	BNE +notShooting
         RTS
     +notShooting ;; we can shoot
+	CMP #06 ;; recoil
+	BNE +notRecoil
+        RTS
+    +notRecoil ;; we can shoot
 
     ;; change player action to "shooting"
     STX temp
