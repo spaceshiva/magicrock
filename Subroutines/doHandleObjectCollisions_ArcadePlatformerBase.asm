@@ -280,7 +280,53 @@
 										JMP +resetsPosition
 
 									+doBlockRecoil
+										LDA Object_direction,x ;; block direction
+										STA temp1
+
+										LDX selfObject ;;this is the player
+										;; grab the player position
+										LDY Object_type,x
+										LDA ObjectBboxTop,y
+										CLC
+										ADC ObjectHeight,y
+										STA temp2
+										
+										LDA Object_x_hi,x
+										CLC
+										ADC ObjectBboxLeft,y
+										STA temp
+
+										LDA temp1 ;; block direction
+										AND #%01000000
+										BNE +blockMovingRight
+											;; if the block is pushing us to left, we need to add 8 to X
+											;; so the collision point comparision function will do the math correctly
+											LDA temp
+											CLC
+											ADC #$08
+											STA temp
+										
+										+blockMovingRight
+
+										JSR getPointColTable  ;; takes the player collision table (loads in tempA)
+										  
+										LDA Object_y_hi,x
+										CLC
+										ADC #$02
+										CLC
+										ADC temp2
+										STA temp3
+
+										; ignore recoil if we are in the middle of the air
+										CheckCollisionPoint temp, temp3, #$01, tempA
+										BEQ +continueWithRecoil
+											ChangeActionStep selfObject, #$00
+											StopMoving selfObject, #$FF
+											JMP +done
+										
+										+continueWithRecoil
 										;; takes the block direction
+										LDX otherObject
 										LDA Object_direction,x
 										AND #%00000111
 										CLC
@@ -289,7 +335,6 @@
 										TAY
 										LDA DirectionTableOrdered,y
 										STA temp1 ;; block direction
-
 										TXA 
 										PHA
 
@@ -303,7 +348,7 @@
 										STA Object_x_hi,x
 										LDA yPrev
 										STA Object_y_hi,x
-
+										;; takes the player direction
 										LDA Object_direction,x
 										AND #%00000111
 										CLC
@@ -329,7 +374,7 @@
 											ChangeActionStep selfObject, #$06 ;; pushing action
 										
 										PLA
-										TAX
+										TAX	
 
 									JMP +done
 
