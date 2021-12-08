@@ -1,4 +1,4 @@
-# MagicRock
+# WizzScape
 
 This project is a custom module for the [NESMaker](https://www.thenew8bitheroes.com/) game engine based on the [`ArcadePlatformerBase` module](https://www.thenew8bitheroes.com/learn). 
 
